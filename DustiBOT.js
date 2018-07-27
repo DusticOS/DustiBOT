@@ -89,7 +89,7 @@ client.on("message", (message) =>
 		//prints a list of available commands
 		if(command === "help")
 		{
-			return message.channel.send("!poll (All)\n!ping (Commander)\n!rise (Admin)\n!say <Text for bot to say> (Admin)\n!ttssay<Text for bot to say> (Admin)\n!mainsay<Text for bot to say> (Admin)\n!excellent (Commander)\n!uhh (Commander)\n!salt (Commander)\n!gay (Commander)\n!feefeealert <Tag a user> (Commander)\n!delete <argument to be deleted> (Commander)\n!triggered (Admin)\n!joinvoice (Admin)\n!rickroll (Admin)\n!youtube <URL to link to be played> (Admin)\n!leave (Admin)\n!help (Commander)\n!exit (Admin)");
+			return message.channel.send("!poll (All)\n!remindme <delay> <unit of time> <message> (All)\n!ping (All)\n!say <Text for bot to say> (Admin)\n!ttssay<Text for bot to say> (Admin)\n!joinvoice (Admin)\n!rickroll (Admin)\n!youtube <URL to link to be played> (Admin)\n!leave (Admin)\n!help (All)");
 		}
 		//Command that starts a poll: "!poll <Question to be asked>"
 		if(command === "poll")
