@@ -4,6 +4,8 @@
 	-Set up external storage, preferably a database of some kind, for storing important long term data
 		-should allow bot to be have some personalization options server to server
 	-Find some way to utilize the presence update event
+	-Rework the poll function completely.  Will not work across multiple servers in this implementation.
+		-voice channel functions have similar limitation
 	*/
 
 
@@ -488,7 +490,7 @@ client.on("message", (message) =>
 						return message.channel.send("If I had a preferred gender pronoun, I'd probably be binary.");
 						break;
 					case 6:
-						return message.channel.send("My master tried to program me on python, but it didn't take long to figure out keyboards bite less.");
+						return message.channel.send("My creator tried to program me on python, but it didn't take long to figure out keyboards bite less.");
 						break;
 					default:
 						return message.channel.send("404 JOKE NOT FOUND");
