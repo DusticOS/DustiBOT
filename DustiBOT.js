@@ -17,7 +17,7 @@ const config = require("./config.json");
 //list of banned words
 
 //array stat stores valid commands that can be checked before users go through the command list
-const commands = ["help","poll","polladd","pollend","ping","excellent","uhh","salt","gay","feefeealert","delete","rise","say","ttssay","mainsay","dmsay","remindme","triggered","joinvoice","rickroll","boohoo","youtube","leave","getid","exit", "setrole"];
+const commands = ["help","poll","polladd","pollend","ping","say","ttssay","remindme","joinvoice","rickroll","youtube","leavevoice"];
 
 //arrays that store roles with specific permissions.
 		
@@ -296,10 +296,6 @@ client.on("message", (message) =>
 		if(!message.member.hasPermission("ADMINISTRATOR"))
 			return message.reply("You do not have permission for this command");
 		//command that directs bot to inform user that it is ready to obey
-		if(command === "rise")
-		{
-			message.channel.send("I obey, master.");
-		}
 		//command that allows user to speak through bot
 		if(command === "say")
 		{
@@ -381,27 +377,6 @@ client.on("message", (message) =>
 					.catch(console.error);
 			}
 		}
-		//identical to the !rickroll command, but instead of Rick Astley, it plays a clip from Spongebob Squarepants where Mr. Krabs plays the worlds smallest violin
-		if(command === "boohoo")
-		{
-			const broadcast = client.createVoiceBroadcast();
-			
-			vchannel = message.member.voiceChannel;
-			if(!vchannel)
-			{
-				return message.channel.send("I'm not going to go in a voice channel alone. Get in one first then try again.");
-			}
-			else
-			{
-				vchannel.join()
-					.then(connection => {
-					//console.log('Connected!')
-					broadcast.playFile("Songs/wsv.mp3", {volume: .1});
-					const dispatcher = connection.playBroadcast(broadcast);
-					})
-					.catch(console.error);
-			}
-		}
 		//command that plays the audio from a designated youtube link: "!youtube <youtube URL>"
 		if(command === "youtube")
 		{
@@ -439,7 +414,7 @@ client.on("message", (message) =>
 			}
 		}
 		//command that tells bot to leave voice channel
-		if(command === "leave")
+		if(command === "leavevoice")
 		{
 			//check if the bot is in a voice channel, print an error if not
 			//TODO: This command is suffering from an error where if the bot is moved without the use of a command, the bot will not know it has changed channels
