@@ -5,7 +5,6 @@
 		-should allow bot to be have some personalization options server to server
 	-Find some way to utilize the presence update event
 	-Rework the poll function completely.  Will not work across multiple servers in this implementation.
-		-voice channel functions have similar limitation
 	*/
 
 
@@ -62,6 +61,13 @@ client.on("presenceUpdate", (oldmember, newmember) => {
 	{
 		console.log(newmember.displayName + " has gone offline.");
 	}*/
+});
+
+client.on("voiceStateUpdate", (oldmember, newmember) => {
+	if(oldmember.user === client.user && newmember.user === client.user)
+	{
+		vchannel = newmember.voiceChannel;
+	}
 });
 
 //message event, triggers when a message is recieved by the bot
@@ -330,9 +336,9 @@ client.on("message", (message) =>
 		if(command === "joinvoice")
 		{
 			//saves the voice channel that the user calling the command is in to the vchannel variable, this is where the bot is going to join
-			vchannel = message.member.voiceChannel;
+			let vc = message.member.voiceChannel;
 			//if the user was not in a voice channel this value will not be saved and the bot will not be able to join
-			if(!vchannel)
+			if(!vc)
 			{
 				//inform the user the bot cannot join an empty voice channel
 				return message.channel.send("Cannot join empty voice channel, please join a channel and try again.");
@@ -341,7 +347,7 @@ client.on("message", (message) =>
 			else
 			{
 				//join designated voice channel
-				vchannel.join()
+				vc.join()
 					//connection event, send a message to console on successful connection
 					.then(connection => {
 					console.log("Connected!")
@@ -358,9 +364,9 @@ client.on("message", (message) =>
 			const broadcast = client.createVoiceBroadcast();
 			
 			//set the voice channel to the one the user calling the command is in
-			vchannel = message.member.voiceChannel;
+			let vc = message.member.voiceChannel;
 			//if the user is not in a voice channel, print an error and return
-			if(!vchannel)
+			if(!vc)
 			{
 				return message.channel.send("Cannot join empty voice channel, please join a channel and try again.");
 			}
@@ -368,7 +374,7 @@ client.on("message", (message) =>
 			else
 			{
 				//join designated voice channel
-				vchannel.join()
+				vc.join()
 				//connection event, upon succesful connection, use the broadcast to play the NGGYU file, make sure this file is in the folder else this will fail.
 				//reduce volume to 10%
 					.then(connection => {
@@ -385,11 +391,11 @@ client.on("message", (message) =>
 			//create broadcast			
 			const broadcast = client.createVoiceBroadcast();
 			//save voice channel
-			vchannel = message.member.voiceChannel;
+			let vc = message.member.voiceChannel;
 			//save provided argument
 			const obj = args.join(" ");
 			//check if user is in a voice channel and that there is an argument, return and print an error if false
-			if(!vchannel)
+			if(!vc)
 			{
 				return message.channel.send("I'm not going to go in a voice channel alone. Get in one first then try again.");
 			}
@@ -400,7 +406,7 @@ client.on("message", (message) =>
 			else
 			{
 				//join a voice channel
-				vchannel.join()
+				vc.join()
 				//connection event
 					.then(connection => {
 					console.log('Connected!')
@@ -430,7 +436,6 @@ client.on("message", (message) =>
 			else
 			{
 				vchannel.leave();
-				vchannel = null;
 			}
 		}
 		//Command that tells the bot to log off bot to log off
