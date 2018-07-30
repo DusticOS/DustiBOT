@@ -22,8 +22,7 @@ const commands = ["help","poll","polladd","pollend","ping","say","ttssay","remin
 
 //arrays that store roles with specific permissions.
 		
-//variable that stores the voice channel the bot is currently in, if any.
-var vchannel = null;
+
 //These variables store information on the poll, if any
 //active poll stores whether or not there is currently a poll on the server
 var activePoll = false;
@@ -61,13 +60,6 @@ client.on("presenceUpdate", (oldmember, newmember) => {
 	{
 		console.log(newmember.displayName + " has gone offline.");
 	}*/
-});
-
-client.on("voiceStateUpdate", (oldmember, newmember) => {
-	if(oldmember.user === client.user && newmember.user === client.user)
-	{
-		vchannel = newmember.voiceChannel;
-	}
 });
 
 //message event, triggers when a message is recieved by the bot
@@ -335,7 +327,7 @@ client.on("message", (message) =>
 		//command that tells the bot to joina voice channel
 		if(command === "joinvoice")
 		{
-			//saves the voice channel that the user calling the command is in to the vchannel variable, this is where the bot is going to join
+			//saves the voice channel that the user calling the command is in to the vc variable, this is where the bot is going to join
 			let vc = message.member.voiceChannel;
 			//if the user was not in a voice channel this value will not be saved and the bot will not be able to join
 			if(!vc)
@@ -424,19 +416,7 @@ client.on("message", (message) =>
 		//command that tells bot to leave voice channel
 		if(command === "leavevoice")
 		{
-			//check if the bot is in a voice channel, print an error if not
-			//TODO: This command is suffering from an error where if the bot is moved without the use of a command, the bot will not know it has changed channels
-			//TODO: thus the bot will be unable to leave a channel with this command unless it is in the channel it started in
-			//TODO: Voice channel join event? find way for bot to recognize that it has changed channels
-			if(!vchannel)
-			{
-				message.channel.send("I can't leave a voice channel I'm not in!");
-			}
-			//compels bot to leave channel, sets vchannel to null
-			else
-			{
-				vchannel.leave();
-			}
+			leaveVoice(message);
 		}
 		//Command that tells the bot to log off bot to log off
 		//should not be available for general use
@@ -514,6 +494,19 @@ client.on("message", (message) =>
 	}
 });
 
+function leaveVoice(message)
+{
+	let vc = client.guilds.get(message.guild.id).voiceConnection;
+	if(vc === null)
+	{
+		message.channel.send("I can't leave a voice channel I'm not in!");
+	}
+	else
+	{
+		vc.channel.leave();
+	}
+}
+
 //reconnecting event, triggers when bot tries to reconnect to websocket
 client.on("reconnecting", (error) =>
 {
@@ -542,7 +535,6 @@ client.on("error", (Error) =>
 	//console.error(Error);
 	//print to console that the bot has disconnected from the server, set the current voice channel to null
 	console.log("Connection failed, logging out.");
-	vchannel = null;
 	//client.destroy();
 });	
 //disconnect event, triggers when the bot disconnects from the server
