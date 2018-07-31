@@ -4,7 +4,6 @@
 	-Set up external storage, preferably a database of some kind, for storing important long term data
 		-should allow bot to be have some personalization options server to server
 	-Find some way to utilize the presence update event
-	-Rework the poll function completely.  Will not work across multiple servers in this implementation.
 	*/
 
 
@@ -19,19 +18,7 @@ const config = require("./config.json");
 
 //array stat stores valid commands that can be checked before users go through the command list
 const commands = ["help","poll","polladd","pollend","ping","say","ttssay","remindme","joinvoice","rickroll","youtube","leavevoice"];
-
-//arrays that store roles with specific permissions.
 		
-
-//These variables store information on the poll, if any
-//active poll stores whether or not there is currently a poll on the server
-var activePoll = false;
-//current poll stores the contents of the active poll, if any
-var currentPoll;
-//the poll answer array is an array that stores the individual answers, the count of how many users support that answer, and the usernames of those users
-var pollAnsArr = [];
-//the poll creator is the creator of the poll, stored for permission purposes
-var pollcreator;	
 	
 //ready event, this triggers when the bot logs on
 client.on("ready", () => 
@@ -94,154 +81,8 @@ client.on("message", (message) =>
 		//Command that starts a poll: "!poll <Question to be asked>"
 		if(command === "poll")
 		{
-			//save argument to const obj
-			const obj = args.join(" ");
-			//if no argument, return and inform user that an argument is required
-			if(!obj)
-			{
-				return message.channel.send("What should I make the poll about? Please provide an argument: `!poll <argument>`.");
-			}
-			//If there is already an active poll, return and inform user to close the active poll first
-			if(activePoll)
-			{
-				return message.channel.send("There's already an active poll, end that one first before you make another one.");
-			}
-			//If neither of these cases are true, create the poll
-			else
-			{
-				//establish that there is an active poll, and make the current poll equal to the argument.
-				//Save the author of the poll for permission purposes
-				//Send a message to the channel to inform users of the new poll, provide instructions for participating
-				activePoll = true;
-				currentPoll = obj;
-				pollCreator = message.author.id.toString();
-				message.channel.send("NEW POLL: " + obj);
-				return message.channel.send("Use `!polladd <Your answer>` to add an answer, and `!pollend` to end the poll!");
-			}
-		}
-		//Command to add an answer to the poll: "!polladd <Answer to poll>"
-		if(command === "polladd")
-		{
-			//Check if there is an active poll.  If there is not, return and inform the user that an active poll is required.
-			if(!activePoll)
-			{
-				return message.channel.send("There is not currently any poll, please start a poll first.");
-			}
-			//Save the argument after the command
-			const obj = args.join(" ").toLowerCase();
-			//If no argument was included, return and inform the user that they need an argument
-			if(!obj)
-			{
-				return message.channel.send("What should I add to the poll? Please provide an answer: `!polladd <argument>`");
-			}
-			//if there is an active poll and an included argument, proceed
-			else
-			{
-				//loop through the array of answers
-				for(var i = 0; i < pollAnsArr.length; i++)
-				{
-					//Check if the answer at element 'i' has any users that have voted for it.  This is because users can change their answer.
-					//So we need to check if the answer's user array even has contents before we can try and loop through it
-					if(pollAnsArr[i].usr)
-					{
-						//loop again (nested loops, I know) this time through the user array that we now know has contents
-						for(var j = 0; j < pollAnsArr[i].usr.length; j++)
-						{
-							//check if the author of the !polladd is in the answer element 'i' user array, and hence has voted for that answer
-							if (pollAnsArr[i].usr[j] === message.author.id.toString())
-							{
-								//if true, check if the author tried submitting the same answer, if true inform them that this is the case and return
-								//this is to prevent users from spamming the poll and inflating their answer
-								if(pollAnsArr[i].ans === obj)
-								{
-									return message.channel.send("You already said that answer!");
-								}
-								//If false, remove the user from the current user array, and reduce the count on answer element 'i', inform the user that their answer has changed and break from the loop
-								//we do not add them to the new new answer yet, break from the loop and continue
-								else
-								{
-									message.channel.send("Your previous answer has been replaced!");
-									delete pollAnsArr[i].usr[j];
-									pollAnsArr[i].freq--;
-									break;
-								}
-							}
-						}
-					}
-				}
-				//lopp that loops through the answers again, it is necessary to do this separately to prevent the bot from getting confused.
-				//Since both loops are searching for different information
-				for(var i = 0; i < pollAnsArr.length; i++)
-				{
-					//Check if answer at element is the same as the submitted answer
-					if(pollAnsArr[i].ans === obj)
-					{
-						//if true, update that answer's frequency and add the author to that answer's user array, inform the chat that the answer now has an additional supporter and return
-						pollAnsArr[i].freq++;
-						pollAnsArr[i].usr.push(message.author.id.toString());
-						return message.channel.send("\"" + pollAnsArr[i].ans + "\"" + " now has " +  pollAnsArr[i].freq + " responses.");
-					}
-				}
-				//in the case that the loop is completed without finding a equivalent answer, create an object that stores:
-				//1. The submitted answer
-				//2. The number of users in support of the answer (Always starts at 1 in this case)
-				//3. The author of the message so we know that they have answered and what they are in support of
-				//push the new answer to the answer array
-				let pAnswer = {ans: obj, freq: 1, usr: [message.author.id.toString()]};
-				pollAnsArr.push(pAnswer);
-				//Inform the chat that the submitted answer has been added
-				return message.channel.send("\"" + pollAnsArr[pollAnsArr.length - 1].ans + "\"" + " has been added as an answer.");	
-			}
-		}
-		//command that ends the active poll
-		if(command === "pollend")
-		{
-			//check for an active poll, if there is none, inform the user that there is no poll to end!
-			if(!activePoll)
-			{
-				return message.channel.send("There is not currently any poll, please start a poll first.");
-			}
-			//check if the user who initiated the pollend has permission to end the poll
-			//if they do not, inform them they cannot end the poll and then return
-			//The users who have permission to end the poll are the bot and server admins, and the user who created the poll
-			if(!(message.author.id.toString() === pollCreator) && !message.member.hasPermission("ADMINISTRATOR"))
-			{
-				return message.channel.send("You do not have permission to end this poll.");
-			}
-			//check if there are any answers, if there are none, end the poll and inform the chat that there are no winners
-			if(!pollAnsArr[0])
-			{
-				message.channel.send("Poll ended with 0 responses");
-				//empty the answer array (Just in case)
-				pollAnsArr = [];
-				//set the current poll to empty
-				currentPoll = "";
-				//set active poll to false
-				activePoll = false;
-				//set poll creator to empty
-				pollCreator = "";
-				//return
-				return;
-			}
-			//Inform the chat the poll is over
-			message.channel.send("Poll: `" + currentPoll + "` ended.");
-			//sort the responses to the poll by their frequency
-			pollAnsArr.sort(function(a, b){return b.freq - a.freq});
-			//loop through the now sorted responses and list them with their number of responses
-			for(var i = 0; i < pollAnsArr.length; i++)
-			{
-				message.channel.send(pollAnsArr[i].freq + " | " + pollAnsArr[i].ans);
-			}
-			//Announce the winner with its vote total
-			message.channel.send("\"" + pollAnsArr[0].ans + "\" is the winner with " + pollAnsArr[0].freq + " votes!");
-			//clear relevant data in preparation for next poll
-			pollAnsArr = [];
-			currentPoll = "";
-			activePoll = false;
-			pollCreator = "";
-			return;
-		}
-		
+			poll(message, args);
+		}		
 		//command that returns the ping
 		if(command === "ping")
 		{
@@ -291,6 +132,10 @@ client.on("message", (message) =>
 			message.channel.send("Roger that! I'll let you know in " + timeDelay + " " + timeUnit);
 			//set timeout function, set delay equal to the delay in milliseconds, set the functions to a simple message send using the provided message, return.
 			return setTimeout(function msgSend() {message.reply(msg);}, timeDelayMil);
+		}
+		if(command === "polladd" || command === "pollend")
+		{
+			return;
 		}
 		//check the user's permissions before checking for the following commands, return and inform user they do not have permissions if they do not.
 		if(!message.member.hasPermission("ADMINISTRATOR"))
@@ -506,7 +351,172 @@ function leaveVoice(message)
 		vc.channel.leave();
 	}
 }
+function poll(message, args)
+{
+	if(!message.channel.activePoll || message.channel.activePoll === false)
+	{
+		//active poll stores whether or not there is currently a poll on the server
+		
+		
+		//save argument to const obj
+		const obj = args.join(" ");
+		//if no argument, return and inform user that an argument is required
+		if(!obj)
+		{
+			return message.channel.send("What should I make the poll about? Please provide an argument: `!poll <argument>`.");
+		}
+		//establish that there is an active poll, and make the current poll equal to the argument.
+		message.channel.activePoll = true;
+		//the poll answer array is an array that stores the individual answers, the count of how many users support that answer, and the usernames of those users
+		message.channel.pollAnsArr = [];
+		//Save the author of the poll for permission purposes
+		message.channel.pollCreator = message.author.id.toString();
+		//current poll stores the contents of the active poll
+		message.channel.currentPoll = obj;
+		//Send a message to the channel to inform users of the new poll, provide instructions for participating
+		message.channel.send("NEW POLL: " + obj);
+		message.channel.send("Use `!polladd <Your answer>` to add an answer, and `!pollend` to end the poll!");
+		const filter = m => m.content.indexOf(config.prefix) === 0;
+		const collector = message.channel.createMessageCollector(filter);
+		
+		collector.on('collect', m => 
+		{
+			const a = m.content.slice(config.prefix.length).trim().split(/ +/g);
+			const cmd = a.shift().toLowerCase();
+			if(m.author.bot)
+			{
+				m.channel.send("Error: bots cannot participate.");
+			}			
+			else if(cmd === "polladd")
+			{
+				pollAdd(m, a);
+			}
+			else if(cmd === "pollend")
+			{
+				if(pollEnd(m))
+				{
+					collector.stop("Ended by user");
+				}
+			}
+		});
+		collector.on('end', collected => 
+		{
+			message.channel.activePoll = false;
+			//check if there are any answers, if there are none, end the poll and inform the chat that there are no winners
+			if(!message.channel.pollAnsArr[0])
+			{
+				message.channel.send("Poll `" + message.channel.currentPoll + "` ended with 0 responses");
+			}
+			else
+			{
+				//Inform the chat the poll is over
+				message.channel.send("Poll: `" + message.channel.currentPoll + "` ended.");
+				//sort the responses to the poll by their frequency
+				message.channel.pollAnsArr.sort(function(a, b){return b.freq - a.freq});
+				//loop through the now sorted responses and list them with their number of responses
+				for(var i = 0; i < message.channel.pollAnsArr.length; i++)
+				{
+					message.channel.send(message.channel.pollAnsArr[i].freq + " | " + message.channel.pollAnsArr[i].ans);
+				}
+				//Announce the winner with its vote total
+				message.channel.send("\"" + message.channel.pollAnsArr[0].ans + "\" is the winner with " + message.channel.pollAnsArr[0].freq + " votes!");
+			}
+		});
+	}
+	else
+	{
+		return message.channel.send("There is already an active poll on this channel.");
+	}
+	return;
+}
+function pollAdd(message, args)
+{
+	//Save the argument after the command
+	const obj = args.join(" ").toLowerCase();
+	//If no argument was included, return and inform the user that they need an argument
+	if(!obj)
+	{
+		message.channel.send("What should I add to the poll? Please provide an answer: `!polladd <argument>`");
+		return;
+	}
+	//if there is an active poll and an included argument, proceed
+	else
+	{
+		//loop through the array of answers
+		for(var i = 0; i < message.channel.pollAnsArr.length; i++)
+		{
+			//Check if the answer at element 'i' has any users that have voted for it.  This is because users can change their answer.
+			//So we need to check if the answer's user array even has contents before we can try and loop through it
+			if(message.channel.pollAnsArr[i].usr)
+			{
+				//loop again (nested loops, I know) this time through the user array that we now know has contents
+				for(var j = 0; j < message.channel.pollAnsArr[i].usr.length; j++)
+				{
+					//check if the author of the !polladd is in the answer element 'i' user array, and hence has voted for that answer
+					if (message.channel.pollAnsArr[i].usr[j] === message.author.id.toString())
+					{
+						//if true, check if the author tried submitting the same answer, if true inform them that this is the case and return
+						//this is to prevent users from spamming the poll and inflating their answer
+						if(message.channel.pollAnsArr[i].ans === obj)
+						{
+							message.channel.send("You already said that answer!");
+							return;
+						}
+						//If false, remove the user from the current user array, and reduce the count on answer element 'i', inform the user that their answer has changed and break from the loop
+						//we do not add them to the new new answer yet, break from the loop and continue
+						else
+						{
+							message.channel.send("Your previous answer has been replaced!");
+							delete message.channel.pollAnsArr[i].usr[j];
+							message.channel.pollAnsArr[i].freq--;
+							break;
+						}
+					}
+				}
+			}
+		}
+		//loop that loops through the answers again, it is necessary to do this separately to prevent the bot from getting confused.
+		//Since both loops are searching for different information
+		for(var i = 0; i < message.channel.pollAnsArr.length; i++)
+		{
+			//Check if answer at element is the same as the submitted answer
+			if(message.channel.pollAnsArr[i].ans === obj)
+			{
+				//if true, update that answer's frequency and add the author to that answer's user array, inform the chat that the answer now has an additional supporter and return
+				message.channel.pollAnsArr[i].freq++;
+				message.channel.pollAnsArr[i].usr.push(message.author.id.toString());
+				message.channel.send("\"" + message.channel.pollAnsArr[i].ans + "\"" + " now has " +  message.channel.pollAnsArr[i].freq + " responses.");
+				return;
+			}
+		}
+		//in the case that the loop is completed without finding a equivalent answer, create an object that stores:
+		//1. The submitted answer
+		//2. The number of users in support of the answer (Always starts at 1 in this case)
+		//3. The author of the message so we know that they have answered and what they are in support of
+		//push the new answer to the answer array
+		let pAnswer = {ans: obj, freq: 1, usr: [message.author.id.toString()]};
+		message.channel.pollAnsArr.push(pAnswer);
+		//Inform the chat that the submitted answer has been added
+		message.channel.send("\"" + message.channel.pollAnsArr[message.channel.pollAnsArr.length - 1].ans + "\"" + " has been added as an answer.");	
+		return;
+	}
+}
 
+function pollEnd(message)
+{
+	//check if the user who initiated the pollend has permission to end the poll
+	//if they do not, inform them they cannot end the poll and then return
+	//The users who have permission to end the poll are the bot and server admins, and the user who created the poll
+	if(!(message.author.id.toString() === message.channel.pollCreator) && !message.member.hasPermission("ADMINISTRATOR"))
+	{
+		message.channel.send("You do not have permission to end this poll.");
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
 //reconnecting event, triggers when bot tries to reconnect to websocket
 client.on("reconnecting", (error) =>
 {
