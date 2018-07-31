@@ -23,13 +23,11 @@ DustiBOT features a number of automatic functions that happen on specific trigge
 
 DustiBOT aslo features a number of chat commands that can be used by users to compell the bot to perform specific functions.
 DustiBOT will ignore messages sent by other bots or to its DMs.  If the message starts with the command prefix, DustiBOT will 
-consider it a command and proceed accordingly.  If the message DustiBOT, it will respond.  If neither condition is true, DustiBOT
-will ignore the message.  The commands are as follows:
+consider it a command and proceed accordingly.  If the message mentions DustiBOT, it will respond.  If neither condition is true, DustiBOT will ignore the message.  The commands are as follows:
 - `!help`
   Provides a list of available commands, the format on how to use them, and the permissions required for each command
 - `!poll <poll description>`
   Start a serverwide poll, poll description is the question being posed.
-  (Note: in current implementation, will not work across multiple servers, needs another look)
 - `!polladd <answer to poll>`
   Provide an additional answer to active poll, or vote for an existing answer.
 - `!pollend`
@@ -53,8 +51,6 @@ will ignore the message.  The commands are as follows:
   DustiBOT will join the voice channel that the user who used the command is in and begin playing the audio from the designated Youtube URL
 - `!leavevoice`
   DustiBOT will leave the voice channel.
-  (NOTE: This feature is not completely functional yet, the bot does not recognize if it is moved from the voice channel it originally joined,
-  and will be unable to leave until it is in that channel.  Additionally, it will likely not work accross servers either).
   
 DustiBOT is also capable of responding to mentions, if a user says hello to DustiBOT, it will say hello back.  Similarly, if the user
 says goodbye, DustiBOT will bid them farewell.  If the user asks DustiBOT how it is doing, it wil provide a status report.  If the
