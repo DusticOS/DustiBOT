@@ -30,6 +30,8 @@ consider it a command and proceed accordingly.  If the message mentions DustiBOT
   Start a serverwide poll, poll description is the question being posed.
 - `!polladd <answer to poll>`
   Provide an additional answer to active poll, or vote for an existing answer.
+- `!pollshow`
+  Display results of the current poll.
 - `!pollend`
   End current poll, only available to admins and user who started original poll
 - `!ping`
