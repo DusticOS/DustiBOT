@@ -4,6 +4,7 @@
 	-Set up external storage, preferably a database of some kind, for storing important long term data
 		-should allow bot to be have some personalization options server to server
 	-Find some way to utilize the presence update event
+	-Create more responses for when the DustiBOT is mentioned
 	*/
 
 
@@ -17,7 +18,7 @@ const config = require("./config.json");
 //list of banned words
 
 //array stat stores valid commands that can be checked before users go through the command list
-const commands = ["help","poll","polladd","pollend","ping","say","ttssay","remindme","joinvoice","rickroll","youtube","leavevoice"];
+const commands = ["help","poll","polladd","pollshow","pollend","ping","say","ttssay","remindme","joinvoice","rickroll","youtube","leavevoice"];
 		
 	
 //ready event, this triggers when the bot logs on
@@ -54,7 +55,9 @@ client.on("message", (message) =>
 {
 	//prevents bots from calling other bots
 	if(message.author.bot) 
+	{
 		return;
+	}
 	//checks if the recieved message was in the bot's personal messages
 	if(message.channel.type === "dm")
 	{
@@ -76,12 +79,12 @@ client.on("message", (message) =>
 		//prints a list of available commands
 		if(command === "help")
 		{
-			return message.channel.send("!poll (All)\n!remindme <delay> <unit of time> <message> (All)\n!ping (All)\n!say <Text for bot to say> (Admin)\n!ttssay<Text for bot to say> (Admin)\n!joinvoice (Admin)\n!rickroll (Admin)\n!youtube <URL to link to be played> (Admin)\n!leave (Admin)\n!help (All)");
+			return message.channel.send("!poll (All)\n!remindme <delay> <unit of time> <message> (All)\n!ping (All)\n!say <Text for bot to say> (Admin)\n!ttssay<Text for bot to say> (Admin)\n!joinvoice (Admin)\n!rickroll (Admin)\n!youtube <URL to link to be played> (Admin)\n!leavevoice (Admin)\n!help (All)");
 		}
 		//Command that starts a poll: "!poll <Question to be asked>"
 		if(command === "poll")
 		{
-			poll(message, args);
+			return poll(message, args);
 		}		
 		//command that returns the ping
 		if(command === "ping")
@@ -91,47 +94,7 @@ client.on("message", (message) =>
 		//command that tells the bot to send a message to chat after a predetermined time period: "!remindme <delay> <unit> <message to be sent>"
 		if(command === "remindme")
 		{
-			//variable that stores the delay value
-			let timeDelay = args[0];
-			//value that stores the delay in miliseconds (conversion later)
-			let timeDelayMil = timeDelay;
-			//variables that stores the unit of time to be used
-			let timeUnit = args[1];
-			//variables that stores the message that will be sent
-			let msg = args.slice(2).join(" ");
-			
-			//check if any of the arguments are missing, provide user with correct command format if false and return
-			if(!timeDelay || !timeUnit || !msg)
-			{
-				return message.channel.send("Error: Invalid Syntax.  Please use format: !remindme <Delay> <Unit of time> <Message>");
-			}
-			//check which unit of time was requested and convert timeDelayMil as appropriate
-			//takes into account user might not use the plural of their unit (In the case for counts of "1" as the delay)
-			if(timeUnit === "seconds" || timeUnit === "second")
-			{
-				timeDelayMil = timeDelay * 1000;
-			}
-			else if(timeUnit === "minutes" || timeUnit === "minute")
-			{
-				timeDelayMil = timeDelay * 60000;
-			}
-			else if(timeUnit === "hours" || timeUnit === "hour")
-			{
-				timeDelayMil = timeDelay * 3600000;
-			}
-			else if(timeUnit === "days" || timeUnit === "day")
-			{
-				timeDelayMil = timeDelay * 3600000 * 24;
-			}
-			//if the unit was not one of these options, inform the user that they have provided an invalid unit and request a valid one, return.
-			else
-			{
-				return message.channel.send("Please designate a valid unit of time.");
-			}
-			//Inform user that the command has gone through, confirm the provided information
-			message.channel.send("Roger that! I'll let you know in " + timeDelay + " " + timeUnit);
-			//set timeout function, set delay equal to the delay in milliseconds, set the functions to a simple message send using the provided message, return.
-			return setTimeout(function msgSend() {message.reply(msg);}, timeDelayMil);
+			return remindMe(message, args);
 		}
 		if(command === "polladd" || command === "pollend")
 		{
@@ -139,7 +102,9 @@ client.on("message", (message) =>
 		}
 		//check the user's permissions before checking for the following commands, return and inform user they do not have permissions if they do not.
 		if(!message.member.hasPermission("ADMINISTRATOR"))
+		{
 			return message.reply("You do not have permission for this command");
+		}
 		//command that directs bot to inform user that it is ready to obey
 		//command that allows user to speak through bot
 		if(command === "say")
@@ -351,6 +316,51 @@ function leaveVoice(message)
 		vc.channel.leave();
 	}
 }
+
+function remindMe(message, args)
+{
+	//variable that stores the delay value
+	let timeDelay = args[0];
+	//value that stores the delay in miliseconds (conversion later)
+	let timeDelayMil = timeDelay;
+	//variables that stores the unit of time to be used
+	let timeUnit = args[1];
+	//variables that stores the message that will be sent
+	let msg = args.slice(2).join(" ");
+	
+	//check if any of the arguments are missing, provide user with correct command format if false and return
+	if(!timeDelay || !timeUnit || !msg)
+	{
+		return message.channel.send("Error: Invalid Syntax.  Please use format: !remindme <Delay> <Unit of time> <Message>");
+	}
+	//check which unit of time was requested and convert timeDelayMil as appropriate
+	//takes into account user might not use the plural of their unit (In the case for counts of "1" as the delay)
+	if(timeUnit === "seconds" || timeUnit === "second")
+	{
+		timeDelayMil = timeDelay * 1000;
+	}
+	else if(timeUnit === "minutes" || timeUnit === "minute")
+	{
+		timeDelayMil = timeDelay * 60000;
+	}
+	else if(timeUnit === "hours" || timeUnit === "hour")
+	{
+		timeDelayMil = timeDelay * 3600000;
+	}
+	else if(timeUnit === "days" || timeUnit === "day")
+	{
+		timeDelayMil = timeDelay * 3600000 * 24;
+	}
+	//if the unit was not one of these options, inform the user that they have provided an invalid unit and request a valid one, return.
+	else
+	{
+		return message.channel.send("Please designate a valid unit of time.");
+	}
+	//Inform user that the command has gone through, confirm the provided information
+	message.channel.send("Roger that! I'll let you know in " + timeDelay + " " + timeUnit);
+	//set timeout function, set delay equal to the delay in milliseconds, set the functions to a simple message send using the provided message, return.
+	return setTimeout(function msgSend() {message.reply(msg);}, timeDelayMil);
+}
 function poll(message, args)
 {
 	if(!message.channel.activePoll || message.channel.activePoll === false)
@@ -375,7 +385,7 @@ function poll(message, args)
 		message.channel.currentPoll = obj;
 		//Send a message to the channel to inform users of the new poll, provide instructions for participating
 		message.channel.send("NEW POLL: " + obj);
-		message.channel.send("Use `!polladd <Your answer>` to add an answer, and `!pollend` to end the poll!");
+		message.channel.send("Use `!polladd <Your answer>` to add an answer, `!pollshow` to see current results, and `!pollend` to end the poll!");
 		const filter = m => m.content.indexOf(config.prefix) === 0;
 		const collector = message.channel.createMessageCollector(filter);
 		
@@ -390,6 +400,10 @@ function poll(message, args)
 			else if(cmd === "polladd")
 			{
 				pollAdd(m, a);
+			}
+			else if(cmd === "pollshow")
+			{
+				pollShow(m);
 			}
 			else if(cmd === "pollend")
 			{
@@ -502,11 +516,26 @@ function pollAdd(message, args)
 	}
 }
 
+function pollShow(message)
+{
+	if(message.channel.pollAnsArr.length < 1)
+	{
+		message.channel.send("Poll: `" + message.channel.currentPoll + "` currently has no results.");
+		return;
+	}
+	message.channel.send("Poll: `" + message.channel.currentPoll + "` Current Results:");
+	for(var i = 0; i < message.channel.pollAnsArr.length; i++)
+	{
+		message.channel.send(message.channel.pollAnsArr[i].freq + " | " + message.channel.pollAnsArr[i].ans);
+	}
+	return;
+}
+
 function pollEnd(message)
 {
 	//check if the user who initiated the pollend has permission to end the poll
 	//if they do not, inform them they cannot end the poll and then return
-	//The users who have permission to end the poll are the bot and server admins, and the user who created the poll
+	//The users who have permission to end the poll are the server admins, and the user who created the poll
 	if(!(message.author.id.toString() === message.channel.pollCreator) && !message.member.hasPermission("ADMINISTRATOR"))
 	{
 		message.channel.send("You do not have permission to end this poll.");
