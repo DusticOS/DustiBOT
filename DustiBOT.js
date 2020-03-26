@@ -18,7 +18,7 @@ const config = require("./config.json");
 //list of banned words
 
 //array stat stores valid commands that can be checked before users go through the command list
-const commands = ["help","poll","polladd","pollshow","pollend","ping","say","ttssay","remindme","joinvoice","rickroll","youtube","leavevoice"];
+const commands = ["help","poll","polladd","pollshow","pollend","ping","say","ttssay","remindme","joinvoice","rickroll","youtube","leavevoice", "roll"];
 		
 	
 //ready event, this triggers when the bot logs on
@@ -99,6 +99,19 @@ client.on("message", (message) =>
 		if(command === "polladd" || command === "pollend")
 		{
 			return;
+		}
+		if(command === "roll")
+		{
+			let result = roll(args)
+			if(result == -1)
+			{
+				return message.channel.send("Error: use format </roll xdy> where x and y are numbers");
+			}
+			else if(result == -2)
+			{
+				return message.channel.send("Error: Cannot roll more than 100 dice or a dice of more than 100 sides.")
+			}
+			return message.channel.send(message.author.toString() + " rolled " + result);
 		}
 		//check the user's permissions before checking for the following commands, return and inform user they do not have permissions if they do not.
 		if(!message.member.hasPermission("ADMINISTRATOR"))
@@ -228,6 +241,7 @@ client.on("message", (message) =>
 		{
 			leaveVoice(message);
 		}
+	
 		//Command that tells the bot to log off bot to log off
 		//should not be available for general use
 		/*if(command === "exit")
@@ -545,6 +559,31 @@ function pollEnd(message)
 	{
 		return true;
 	}
+}
+
+function roll(args)
+{
+	if(args.length != 1 && args.length != 3)
+	{
+		return -1;
+	}
+	let arr = args[0].split("d");
+	if(isNaN(arr[0]) || isNaN(arr[1]) || arr.length != 2)
+	{
+		return -1;
+	}	
+	let numDice = arr[0];
+	let numSides = arr[1];
+	if(numDice > 100 || numSides > 100)
+	{
+		return -2
+	}
+	let result = 1;
+	for(var i = 0; i < numDice; i++)
+	{
+		result += Math.floor(Math.random() * numSides);
+	}
+	return result;
 }
 //reconnecting event, triggers when bot tries to reconnect to websocket
 client.on("reconnecting", (error) =>
